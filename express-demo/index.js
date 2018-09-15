@@ -1,94 +1,47 @@
 const express = require("express");
-const bodyParser = require("body-parser");
+const config = require('config');
+// const bodyParser = require("body-parser");
 const Joi = require("joi");
+const helmet = require('helmet')
+const morgan = require('morgan')
+
+const logger = require('./middlewares/logger');
+const clients = require('./routes/clients')
+const home = require('./routes/home')
 
 const app = express();
 
-// Middlewares, eu acho
+const startDebugger = require('debug')('app:start');
+const dbDebugger = require('debug')('app:db');
+
+startDebugger('Iniciando aplicação...');
+dbDebugger('Conectando ao banco...');
+
+// Middlewares
+app.use(helmet());
 app.use(express.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true })); // app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.static('public'));
+app.use(logger);
 
-const clients = [
-  {
-    id: 1,
-    name: "Jão"
-  },
-  {
-    id: 2,
-    name: "Mary"
-  }
-];
+app.set('view engine', 'pug');
+app.set('views', './views');
 
-app.get("/", (req, res) => {
-  res.send("Página inicial");
-});
+// rotas
+app.use('/api/clients', clients);
+app.use('/', home);
 
-app.get("/api/clients", (req, res) => {
-  res.send(clients);
-});
+// Environment
+console.log(config.get('app_name'));
+console.log('Mail pass: ', config.get('mail_pass'));
 
-// get a client
-app.get("/api/clients/:id", (req, res) => {
-  const id = parseInt(req.params.id);
-  const client = clients.find(c => c.id === id);
+// proccess.env.NODE_DEV
+console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
+if (app.get('env') === 'development') {
+  console.log('Executando morgan!');
+  app.use(morgan('tiny'));
+}
 
-  if (!client) return res.status(404).send(`Cliente #${id} não foi encontrado!`);
-
-  res.send(client);
-});
-
-app.get("/api/clients/:year/:month/:day?", (req, res) => {
-  res.send(req.query);
-  res.send(req.params);
-});
-
-// post a client
-app.post("/api/clients", (req, res) => {
-  const { error }= validateClient(req.body);
-  if (error) return res.status(400).send(error.details[0].message);
-
-  const client = {
-    id: clients.length + 1,
-    name: req.body.name
-  };
-
-  clients.push(client);
-
-  res.send(client);
-});
-
-app.put('/api/clients/:id', (req, res) => {
-  const id = parseInt(req.params.id);
-  const client = clients.find(c => c.id === id);
-  if (!client) return res.status(404).send(`Cliente #${id} não foi encontrado!`);
-
-  const { error } = validateClient(req.body);
-  if (error) {
-    return res.status(404).send(error.details[0].message);
-  }
-
-  client.name = req.body.name;
-  res.send(client);
-});
-
-app.delete('/api/clients/:id', (req, res) => {
-  const id = parseInt(req.params.id);
-  const client = clients.find(c => c.id === id);
-  if (!client) return res.status(404).send(`Cliente #${id} não foi encontrado!`);
-
-  const index = clients.indexOf(client);
-  clients.splice(index, 1);
-
-  res.send(client);
-});
-
-validateClient = (data) => {
-  const schema = {
-    name: Joi.string().min(3).required()
-  };
-
-  return Joi.validate(data, schema);
-};
 
 const port = process.env.PORT || 3000;
 app.listen(port, () => console.log(`Server na porta ${port}`));

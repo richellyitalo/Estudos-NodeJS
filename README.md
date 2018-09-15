@@ -33,3 +33,8 @@
 Retornando a variável na aplicação
 `proccess.env.[VARIAVEL]`
 
+# Environment no Express
+Retornar o env atual
+`app.get('env'); // proccess.env.NODE_ENV`
+Se não estiver definido retornará o padrão que é 'development'
+Use `set NODE_ENV=production` para alterar
