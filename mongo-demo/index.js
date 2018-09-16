@@ -7,9 +7,41 @@ mongoose
 
 // Schema
 const courseSchema = new mongoose.Schema({
-  name: String,
-  author: String,
-  tags: [String],
+  name: { 
+    type: String,
+    required: true,
+    match: /.*react.*/i
+  },
+  category: {
+    type: String,
+    enum: ['web', 'mobile', 'desktop']
+  },
+  price: {
+    type: Number,
+    get: v => Math.round(v),
+    set: v => Math.round(v)
+  },
+  author: {
+    type: String,
+    validate: {
+      isAsync: true,
+      validator: (v, cb) => {
+        setTimeout(() => {
+          const result = v === 'Richelly';
+          cb(result);
+        }, 4000);
+      },
+      message: 'Valor informado diferente de \'Richelly\''
+    }
+  },
+  // Validação customizada
+  tags: {
+    type: Array,
+    validate: {
+      validator: v => v && v.length > 0,
+      message: 'Deve ser informada pelo menos uma Tag'
+    },
+  },
   date: { type: Date, default: Date.now },
   isPublished: Boolean
 });
@@ -18,14 +50,36 @@ const Course = mongoose.model("Course", courseSchema);
 
 async function createCourse() {
   const course = new Course({
-    name: "AngularJS",
-    author: "Richelly",
-    tags: ["front", "google"],
+    name: "ReactJs",
+    category: 'web',
+    author: "Italo",
+    tags: null,
+    price: 10,
     isPublished: true
   });
 
-  const result = await course.save();
-  console.log(result);
+  // Validacao #1
+  // try {
+  //   const result = await course.save();
+  //   console.log(result);
+  // } catch(ex) {
+  //   console.log(ex.message);
+  // }
+
+  // Validacao #2
+  // course.validate(err => {
+  //   console.log('Deu ruim', err.message);
+  // })
+
+  // Validacao #3
+  try {
+    await course.validate();
+  } catch (ex) {
+    // console.log("Não salvou", ex.message);
+    for (field in ex.errors) {
+      console.log(ex.errors[field].message);
+    }
+  }
 }
 
 async function getCourses() {
@@ -39,7 +93,7 @@ async function getCourses() {
     // Termina com $
     // .find({ author: /lo$/})
 
-    // Contém 
+    // Contém
     // .find({ author: /.*i.*/i }) // i diz que pode ser maiusculo ou minusculo
 
     // Paginação
@@ -47,7 +101,7 @@ async function getCourses() {
     // const pageSize = 10;
     // .skip((pageNumber -1) * pageSize)
     // .limit(pageSize)
-    
+
     .find()
     .limit(2)
     .sort({ name: 1 })
@@ -57,17 +111,13 @@ async function getCourses() {
   console.log(courses);
 }
 
-// getCourses();
-
-// createCourse();
-
 // Atualizar via query find
 async function updateCourse_QueryFind(id) {
   const course = await Course.findById(id);
   if (!course) return;
 
   course.isPublished = true;
-  course.author = 'Outro Autor';
+  course.author = "Outro Autor";
 
   const result = await course.save();
   console.log(result);
@@ -96,12 +146,16 @@ async function updateCourse_UpdateFirst(id) {
   // console.log(course);
 
   // #3
-  const course = await Course.findByIdAndUpdate({ _id: id}, {
-    $set: {
-      name: 'Jazico',
-      isPublished: false
-    }
-  }, { new: true });
+  const course = await Course.findByIdAndUpdate(
+    { _id: id },
+    {
+      $set: {
+        name: "Jazico",
+        isPublished: false
+      }
+    },
+    { new: true }
+  );
   console.log(course);
 }
 
@@ -109,8 +163,10 @@ async function updateCourse_UpdateFirst(id) {
 
 async function removeCourse(id) {
   // const result = await Course.deleteOne({_id: id});
-  const course = await Course.findByIdAndDelete({ _id: id})
+  const course = await Course.findByIdAndDelete({ _id: id });
   console.log(course);
 }
 
-removeCourse('5b9dd7183fdfcf1d44decfc3');
+// removeCourse('5b9dd7183fdfcf1d44decfc3');
+
+createCourse();
