@@ -34,3 +34,4 @@ function validate(data) {
 
 exports.Customer = Customer;
 exports.validate = validate;
+exports.schema = schema;

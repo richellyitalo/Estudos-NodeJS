@@ -1,8 +1,8 @@
 {
-  "name": "genres-api",
+  "name": "mongodb-relationship",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "population.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -10,10 +10,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "express": "^4.16.3",
-    "fawn": "^2.1.5",
-    "joi": "^13.6.0",
-    "joi-objectid": "^2.0.0",
     "mongoose": "^5.2.15"
   }
 }
