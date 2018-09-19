@@ -11,6 +11,7 @@ const movies = require('./routes/movies');
 const rentals = require('./routes/rentals');
 const users = require('./routes/users');
 const auth = require('./routes/auth');
+const authMiddleware = require('./middlewares/auth');
 
 const app = express();
 
@@ -20,15 +21,21 @@ if (!config.get('jwtPrivateKey')) {
 }
 
 // Conexão
-mongoose.connect('mongodb://localhost/estudos-genres')
+mongoose.connect('mongodb://localhost/vidly')
+// mongoose.connect('mongodb://cco.ponteon.com.br:49017/estudos_vidly')
   .then(() => console.log('Database conectado'))
-  .catch(err => console.log('Não foi possível conectar ao Database', err.message));
+  .catch(err => {
+    console.log('Não foi possível conectar ao Database', err.message)
+    process.exit(1);
+  });
 
 // Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Rotas
+app.use(['/api/rentals'], authMiddleware);
+
 app.use(home);
 app.use('/api/genres', genres);
 app.use('/api/customers', customers);

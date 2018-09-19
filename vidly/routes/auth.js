@@ -12,11 +12,11 @@ router.post('/', async (req, res) => {
   let user = await User.findOne({ email: req.body.email });
   if (!user) return res.status(400).send('E-mail ou senha inválidos.');
 
-  const passwordIsValid = await bcrypt.compare(req.body.password, user.password);
+  const isPasswordValid = await bcrypt.compare(req.body.password, user.password);
 
-  if (!passwordIsValid) return res.status(400).send('Password inválido.');
+  if (!isPasswordValid) return res.status(400).send('Password inválido.');
 
-  const token = jwt.sign({ _id: user._id }, config.get('jwtPrivateKey'));
+  const token = user.generateAuthToken();
 
   res.send(token);
 });
